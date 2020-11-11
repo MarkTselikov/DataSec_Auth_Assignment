@@ -1,2 +1,9 @@
-admin,AfT84SLsScE52w==$kBI=,Admin
-user1,h5EnBQw/9/bD7Q==$WlY=,User
+alice,h5EnBQw/9/bD7Q==$WlY=
+bob,h5EnBQw/9/bD7Q==$WlY=
+cecilia,h5EnBQw/9/bD7Q==$WlY=
+erica,h5EnBQw/9/bD7Q==$WlY=
+fred,h5EnBQw/9/bD7Q==$WlY=
+george,h5EnBQw/9/bD7Q==$WlY=
+david,h5EnBQw/9/bD7Q==$WlY=
+henry,h5EnBQw/9/bD7Q==$WlY=
+ida,h5EnBQw/9/bD7Q==$WlY=

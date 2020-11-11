@@ -10,15 +10,13 @@ public class PrinterManager implements IPrinterManager {
     private final String STATUS_STOPPED = "Stopped";
     private final String STATUS_RUNNING = "Running";
 
-    private final String ROLE_ADMIN = "Admin";
-    private final String ROLE_USER = "User";
-
     private final String LOGIN_FILE_PATH = "logins.txt";
     private final String LOG_FILE_PATH = "log.txt";
 
     private String status;
 
-    private static List<String> loggedUserTokens;
+    private static Map<String,String> loggedUserTokens;
+
     private static Map<String, String> roles;
     private Map<String, String> config;
     private List<PrinterJob> jobQueue;
@@ -28,8 +26,8 @@ public class PrinterManager implements IPrinterManager {
         config = new HashMap<String, String>();
         jobQueue = new ArrayList<>();
 
-        loggedUserTokens = new ArrayList<>();
-        roles = new HashMap<String, String>();
+        loggedUserTokens = new HashMap<>();
+        //roles = new HashMap<String, String>();
 
         File log = new File(LOG_FILE_PATH);
         try {
@@ -46,6 +44,16 @@ public class PrinterManager implements IPrinterManager {
             return "Unauthenticated attempt to print";
         }
 
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "print")) {
+            appendToLog("Unauthorized attempt to start the server", token);
+            return "You don't have rights to perform this operation.";
+        } 
+
         String message = "Adding the file " + filename + "to the queue on the printer " + printer;
 
         appendToLog(message, token);
@@ -59,6 +67,16 @@ public class PrinterManager implements IPrinterManager {
         if (!isLoggedIn(token)) {
             appendToLog("Unauthenticated attempt to access the printing queue", token);
             return "Unauthenticated attempt to print";
+        }
+
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "queue")) {
+            appendToLog("Unauthorized attempt to start the server", token);
+            return "You don't have rights to perform this operation.";
         }
 
         StringBuilder sb = new StringBuilder();
@@ -75,6 +93,16 @@ public class PrinterManager implements IPrinterManager {
         if (!isLoggedIn(token)) {
             appendToLog("Unauthenticated attempt to access the printing queue", token);
             return "Unauthenticated attempt to access the printing queue";
+        }
+
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "topQueue")) {
+            appendToLog("Unauthorized attempt to start the server", token);
+            return "You don't have rights to perform this operation.";
         }
 
         try {
@@ -101,7 +129,12 @@ public class PrinterManager implements IPrinterManager {
             return "Unauthenticated attempt to start the server";
         }
 
-        if (!roles.get(token).equals(ROLE_ADMIN)) {
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "start")) {
             appendToLog("Unauthorized attempt to start the server", token);
             return "You don't have rights to perform this operation.";
         }
@@ -124,8 +157,13 @@ public class PrinterManager implements IPrinterManager {
             return "Unauthenticated attempt to access the printing queue";
         }
 
-        if (!roles.get(token).equals(ROLE_ADMIN)) {
-            appendToLog("Unauthorized attempt to stop the server", token);
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "stop")) {
+            appendToLog("Unauthorized attempt to start the server", token);
             return "You don't have rights to perform this operation.";
         }
 
@@ -148,8 +186,13 @@ public class PrinterManager implements IPrinterManager {
             return "Unauthenticated attempt to access the printing queue";
         }
 
-        if (!roles.get(token).equals(ROLE_ADMIN)) {
-            appendToLog("Unauthorized attempt to access the printing queue", token);
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "restart")) {
+            appendToLog("Unauthorized attempt to start the server", token);
             return "You don't have rights to perform this operation.";
         }
 
@@ -164,6 +207,7 @@ public class PrinterManager implements IPrinterManager {
 
     @Override
     public String status(String printer, String token) throws RemoteException {
+
         appendToLog("Status of the server requested", token);
         return status;
     }
@@ -173,6 +217,16 @@ public class PrinterManager implements IPrinterManager {
         if (!isLoggedIn(token)) {
             appendToLog("Unauthenticated attempt to access the server configuration", token);
             return "Unauthenticated attempt to access the server configuration";
+        }
+
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "readConfig")) {
+            appendToLog("Unauthorized attempt to start the server", token);
+            return "You don't have rights to perform this operation.";
         }
 
         appendToLog("Access to the server configuration.", token);
@@ -187,8 +241,13 @@ public class PrinterManager implements IPrinterManager {
             return "You need to log in first.";
         }
 
-        if (!roles.get(token).equals(ROLE_ADMIN)) {
-            appendToLog("Unauthorized attempt to change the server configuration", token);
+        String user = findAssociatedUser(token);
+
+        if (user==null) {
+            return "You don't have rights to perform this operation.";
+        } 
+        else if (!AccessAuthorization.verifyAccess(user, "setConfig")) {
+            appendToLog("Unauthorized attempt to start the server", token);
             return "You don't have rights to perform this operation.";
         }
 
@@ -213,10 +272,8 @@ public class PrinterManager implements IPrinterManager {
                 String[] line_vals = line.split(",");
                 if (line_vals[0].equals(username) && HashingUtil.check(password, line_vals[1])) {
                     String token = generateToken();
-                    loggedUserTokens.add(token);
-                    roles.put(token, line_vals[2]);
-
-                    appendToLog("Logged in user " + line_vals[0] + " with role " + line_vals[2]
+                    loggedUserTokens.put(token,username);
+                    appendToLog("Logged in user " + line_vals[0]
                             + "\n(Token: " + token + ")");
                     return token;
                 }
@@ -237,12 +294,21 @@ public class PrinterManager implements IPrinterManager {
     }
 
     // checking if the user token is registered as logged in
+    // changed it to add username: return now a UserToken Object
     private boolean isLoggedIn(String token) {
-        for (String loggedToken: loggedUserTokens) {
-            if(token.equals(loggedToken))
-                return true;
+        if (loggedUserTokens.containsKey(token)) {
+            return true;
         }
         return false;
+    }
+
+    //find user associated to token
+    private String findAssociatedUser(String token) {
+
+        if (loggedUserTokens.containsKey(token)) {
+            return loggedUserTokens.get(token);
+        }       
+        return null;
     }
 
     // method that generates a random string that is used as a user token

@@ -1,0 +1,8 @@
+{ 
+
+"admin" : {"alice":true},
+"janitor" : {"bob":true},
+"powerUser" : {"cecilia":true},
+"user" : {"david":true, "erica":true, "fred":true, "george":true},
+
+}

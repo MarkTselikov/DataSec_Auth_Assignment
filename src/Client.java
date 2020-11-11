@@ -22,14 +22,14 @@ public class Client {
                     "with the option you need.\n");
 
             reader = new BufferedReader(new InputStreamReader(System.in));
-            String loginToken = null;
-            while (loginToken == null) {
-                loginToken = loginToServer();
-                if (loginToken == null)
+            String loginTokenObj = null;
+            while (loginTokenObj == null) {
+                loginTokenObj = loginToServer();
+                if (loginTokenObj == null)
                     System.out.println("Login not successful, check your user name and password and try again.");
             }
 
-            token = loginToken;
+            token = loginTokenObj; //added the 0 to take the token into account
             System.out.println("Successfully logged in to the server!");
             displayMenu();
             reader.close();

@@ -1,0 +1,4 @@
+admin,[start;stop;restart;status;readConfig;setConfig;print;queue;topQueue]
+janitor,[start;stop;restart;status;readConfig;setConfig;]
+powerUser,[print;queue;topQueue;restart]
+user,[print;queue]

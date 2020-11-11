@@ -9,7 +9,6 @@ public class PrinterManagerServer extends PrinterManager {
             PrinterManager obj = new PrinterManager();
             IPrinterManager stub = (IPrinterManager) UnicastRemoteObject.exportObject(obj, 0);
             Registry registry = LocateRegistry.getRegistry();
-
             registry.bind("IPrinterManager", stub);
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());

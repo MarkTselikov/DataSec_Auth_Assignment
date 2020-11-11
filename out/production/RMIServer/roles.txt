@@ -1,0 +1,4 @@
+admin,[alice]
+janitor,[bob]
+powerUser,[cecilia]
+user,[david;erica;fred;george]
